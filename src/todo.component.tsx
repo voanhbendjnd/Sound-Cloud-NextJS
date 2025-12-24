@@ -2,37 +2,29 @@ import { useState } from "react";
 
 interface IProps {
     name: string;
+    handleTest: (name: string) => void;
 }
-let cnt = 1;
 const TodoComponent = (props: IProps) => {
-    const { name } = props
-    const [fullName, setFullName] = useState("");
+    const [list, setList] = useState(["todo 4", "todo 2", "todo 3", "todo 4"])
+
+    const { name, handleTest } = props
     const handleClick = () => {
         setList([...list, todos])
+        setTodos("");
 
     }
-    const [list, setList] = useState(["todo 4", "todo 2", "todo 3", "todo 4"])
-    const increase = () => {
-        cnt = cnt + 1;
+    const [fullName, setFullName] = useState("");
 
-    }
-    const todos = ["todo 1", "todo 2", "todo 3", "todo 4"]
+    const [todos, setTodos] = useState("")
     return (
         <div>
-            <button onClick={() => {
-                increase()
-            }}>Increase</button>
-            <div>{cnt}</div>
-            <div>{fullName}</div>
-            <div>
-                {name}
-            </div>
-            <input value={todos} type="text" onChange={(event) => {
+            <input type="text" onChange={(event) => {
                 setFullName(event.target.value)
             }}>
             </input>
             <button onClick={() => {
                 handleClick()
+                handleTest(fullName)
             }}>Input</button>
             <ul>
                 {list.map((it, index) => {
@@ -41,7 +33,6 @@ const TodoComponent = (props: IProps) => {
                     )
                 })}
             </ul>
-            <span>{cnt}</span>
         </div>
     )
 }
