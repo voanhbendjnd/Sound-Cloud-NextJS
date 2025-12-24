@@ -3,11 +3,13 @@ import { useState } from "react";
 interface IProps {
     name: string;
     handleTest: (name: string) => void;
+    setList: (v: string[]) => void;
+    list: () => string[];
 }
 const TodoComponent = (props: IProps) => {
-    const [list, setList] = useState(["todo 4", "todo 2", "todo 3", "todo 4"])
 
-    const { name, handleTest } = props
+
+    const { name, handleTest, list, setList } = props
     const handleClick = () => {
         setList([...list, todos])
         setTodos("");

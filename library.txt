@@ -1,0 +1,2 @@
+react router (website have many pages)
+npm i --save-exact react-router-dom@6.15.0
