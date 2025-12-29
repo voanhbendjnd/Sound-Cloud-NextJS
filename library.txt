@@ -1,2 +1,7 @@
 react router (website have many pages)
-npm i --save-exact react-router-dom@6.15.0
+    npm i --save-exact react-router-dom@6.15.0
+antd
+    npm install antd
+    npm install --save-exact antd@5.21.6 @ant-design/icons@5.5.1
+SASS for css
+    npm i --save-exact sass@1.66.1 --legacy-peer-deps
