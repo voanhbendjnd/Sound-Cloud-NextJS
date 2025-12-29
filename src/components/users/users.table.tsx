@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 // import '../../styles/users.css'
 import type { ColumnsType } from 'antd/es/table';
 import Table from 'antd/es/table';
+import { Button, Modal } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 interface IUsers {
     id: number;
     name: string,
@@ -9,6 +11,7 @@ interface IUsers {
 }
 
 const UsersTable = () => {
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const columns: ColumnsType<IUsers> = [
         {
             title: 'ID',
@@ -52,10 +55,39 @@ const UsersTable = () => {
     }, [])
     return (
         <div>
-            <div>
-                User Table
+            <div style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+            }}>
+                <h1>
+                    User Table
+                </h1>
+                <Button
+                    type='primary'
+                    icon={<PlusOutlined />}
+                    onClick={() => {
+                        setIsModalOpen(true)
+                    }}
+                >Add</Button>
+                <Modal
+                    title="Basic Modal"
+                    closable={{ 'aria-label': 'Custom Close Button' }}
+                    open={isModalOpen}
+                    onOk={() => {
+                        setIsModalOpen(false)
+                    }}
+                    onCancel={() => {
+                        setIsModalOpen(false)
+                    }}
+                >
+                    <p>Some contents...</p>
+                    <p>Some contents...</p>
+                    <p>Some contents...</p>
+                </Modal>
             </div>
             <Table
+                rowKey={"id"}
                 columns={columns}
                 dataSource={listUsers}
             >
