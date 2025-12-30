@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 // import '../../styles/users.css'
 import type { ColumnsType } from 'antd/es/table';
 import Table from 'antd/es/table';
-import { Button, Input, Modal, Select } from 'antd';
+import { Button, Input, Modal, notification, Select } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import Password from 'antd/es/input/Password';
 interface IUsers {
     id: number;
     name: string,
@@ -15,17 +16,57 @@ interface IRoles {
     description: string
 }
 const UsersTable = () => {
+    const [api, contextHolder] = notification.useNotification();
     const [name, setName] = useState<string>("");
     const [email, setEmail] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
     const [listRoles, setListRoles] = useState<IRoles[]>([]);
-    const [role, setRole] = useState<number>(0);
+    const [roleId, setRole] = useState<number>(0);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const handleOk = () => {
+    const [confirmPassword, setConfirmPassword] = useState<string>("");
+    const handleCloseCreateModal = () => {
+        setIsModalOpen(false)
+        setName("")
+        setEmail("")
+        setPassword("")
+        setConfirmPassword("")
+    }
+    const handleOk = async () => {
         const data = {
-            name, email, role
+            name: name,
+            email: email,
+            roleId: roleId,
+            management_password: {
+                password: password,
+                confirm_password: confirmPassword
+            }
         }
         console.log("MY DATA: ", data)
-        setIsModalOpen(false)
+        const res = await fetch(
+            "http://localhost:8080/api/v1/users", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ ...data })
+        }
+        )
+        const d = await res.json()
+        if (res.status !== 201) {
+            api.error({
+                description: d.message,
+                message: d.error
+            })
+        }
+        else {
+            api.success({
+                message: "Success",
+                description: "Create user success"
+            })
+            handleCloseCreateModal();
+            await getData()
+        }
+
     }
     const columns: ColumnsType<IUsers> = [
         {
@@ -81,6 +122,7 @@ const UsersTable = () => {
     }, [])
     return (
         <div>
+            {contextHolder}
             <div style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -105,7 +147,7 @@ const UsersTable = () => {
                         handleOk()
                     }}
                     onCancel={() => {
-                        setIsModalOpen(false)
+                        handleCloseCreateModal();
                     }}
                 >
                     <div>
@@ -123,6 +165,25 @@ const UsersTable = () => {
                             value={email}
                             onChange={(event) => {
                                 setEmail(event.target.value)
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label>Password</label>
+                        <Password
+                            value={password}
+                            onChange={(event) => {
+                                setPassword(event.target.value)
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label>Confirm Password</label>
+                        <Password
+                            value={confirmPassword}
+                            onChange={(event) => {
+                                setConfirmPassword(event.target.value)
                             }}
                         />
                     </div>
