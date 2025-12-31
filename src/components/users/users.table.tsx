@@ -2,77 +2,38 @@ import { useEffect, useState } from 'react'
 // import '../../styles/users.css'
 import type { ColumnsType } from 'antd/es/table';
 import Table from 'antd/es/table';
-import { Button, Input, Modal, notification, Select } from 'antd';
+import { Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import Password from 'antd/es/input/Password';
-interface IUsers {
+import UserCreateModal from './users.create.modal';
+import '../../App.scss'
+import UserUpdateModal from './users.update.modal';
+export interface IUsers {
     id: number;
     name: string,
     email: string,
+    role: {
+        id: number,
+        name: string,
+    }
+
 }
-interface IRoles {
+export interface IRoles {
     id: number,
     name: string,
     description: string
 }
-const UsersTable = () => {
-    const [api, contextHolder] = notification.useNotification();
-    const [name, setName] = useState<string>("");
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [listRoles, setListRoles] = useState<IRoles[]>([]);
-    const [roleId, setRole] = useState<number>(0);
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-    const [confirmPassword, setConfirmPassword] = useState<string>("");
-    const handleCloseCreateModal = () => {
-        setIsModalOpen(false)
-        setName("")
-        setEmail("")
-        setPassword("")
-        setConfirmPassword("")
-    }
-    const handleOk = async () => {
-        const data = {
-            name: name,
-            email: email,
-            roleId: roleId,
-            management_password: {
-                password: password,
-                confirm_password: confirmPassword
-            }
-        }
-        console.log("MY DATA: ", data)
-        const res = await fetch(
-            "http://localhost:8080/api/v1/users", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ ...data })
-        }
-        )
-        const d = await res.json()
-        if (res.status !== 201) {
-            api.error({
-                description: d.message,
-                message: d.error
-            })
-        }
-        else {
-            api.success({
-                message: "Success",
-                description: "Create user success"
-            })
-            handleCloseCreateModal();
-            await getData()
-        }
 
-    }
+const UsersTable = () => {
+    const [dataUser, setDataUser] = useState<IUsers>();
+    const [listRoles, setListRoles] = useState<IRoles[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [isOpenUpdateModal, setIsOpenUpdateModal] = useState<boolean>(false);
+
     const columns: ColumnsType<IUsers> = [
         {
             title: 'ID',
             dataIndex: 'id',
-            render: (value, record) => {
+            render: (_value, record) => {
                 return (
                     <a>
                         {record.id}
@@ -87,6 +48,24 @@ const UsersTable = () => {
         {
             title: "Email",
             dataIndex: "email"
+        },
+        {
+            title: "Actions",
+            render: (value, record) => {
+                return (
+                    <div style={{ display: "flex", gap: "10px" }}>
+                        <Button style={{ backgroundColor: "white", color: "green", border: "2px solid green" }}
+                            onClick={() => {
+                                setIsOpenUpdateModal(true)
+                                setDataUser(record)
+                            }}
+                        >Edit</Button>
+                        <Button type="primary" danger ghost>
+                            Delete
+                        </Button>
+                    </div>
+                )
+            }
         }
     ]
     const [listUsers, setListUsers] = useState<IUsers[]>([]);
@@ -122,11 +101,11 @@ const UsersTable = () => {
     }, [])
     return (
         <div>
-            {contextHolder}
             <div style={{
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
+                flexDirection: "column",
+                // justifyContent: "space-between",
+                alignItems: "flex-start"
             }}>
                 <h1>
                     User Table
@@ -138,68 +117,21 @@ const UsersTable = () => {
                         setIsModalOpen(true)
                     }}
                 >Add</Button>
-                <Modal
-                    title="Add new user"
-                    closable={{ 'aria-label': 'Custom Close Button' }}
-                    open={isModalOpen}
-                    maskClosable={false}
-                    onOk={() => {
-                        handleOk()
-                    }}
-                    onCancel={() => {
-                        handleCloseCreateModal();
-                    }}
-                >
-                    <div>
-                        <label>Name</label>
-                        <Input
-                            value={name}
-                            onChange={(event) => {
-                                setName(event.target.value)
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <label>Email</label>
-                        <Input
-                            value={email}
-                            onChange={(event) => {
-                                setEmail(event.target.value)
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <label>Password</label>
-                        <Password
-                            value={password}
-                            onChange={(event) => {
-                                setPassword(event.target.value)
-                            }}
-                        />
-                    </div>
+                <UserCreateModal
+                    listRoles={listRoles}
+                    getData={getData}
+                    isModalOpen={isModalOpen}
+                    setIsModalOpen={setIsModalOpen}
+                />
+                <UserUpdateModal
+                    listRoles={listRoles}
+                    getData={getData}
+                    isModalOpen={isOpenUpdateModal}
+                    setIsModalOpen={setIsOpenUpdateModal}
+                    dataUser={dataUser}
+                    setDataUser={setDataUser}
+                />
 
-                    <div>
-                        <label>Confirm Password</label>
-                        <Password
-                            value={confirmPassword}
-                            onChange={(event) => {
-                                setConfirmPassword(event.target.value)
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <label>Role</label>
-                        <Select
-                            placeholder="Select role"
-                            style={{ width: "100%" }}
-                            options={listRoles.map(role => ({
-                                label: role.name,
-                                value: role.id,
-                            }))}
-                            onChange={(value) => setRole(value)}
-                        ></Select>
-                    </div>
-                </Modal>
             </div>
             <Table
                 rowKey={"id"}

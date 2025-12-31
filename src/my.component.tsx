@@ -1,10 +1,5 @@
 const MyComponenent = () => {
-    const name = "Bentenyson";
-    const age = 12;
-    const info = {
-        name: "Havana",
-        age: 23
-    }
+
     const arr = [1, 2, 3];
     return (
         <div>
