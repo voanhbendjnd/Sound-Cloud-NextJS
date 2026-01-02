@@ -1,7 +1,6 @@
-import { Input, Modal, notification, Select } from "antd";
-import Password from "antd/es/input/Password";
-import { useState } from "react";
-import type { IRoles } from "./users.table";
+import { Checkbox, Form, Input, Modal, notification, Select } from "antd";
+import type { IRoles, IUsers } from "./users.table";
+import { useForm } from "antd/es/form/Form";
 
 interface IProps {
     isModalOpen: boolean
@@ -12,38 +11,31 @@ interface IProps {
 
 const UserCreateModal = (props: IProps) => {
     const [api, contextHolder] = notification.useNotification();
-
+    const [form] = useForm();
     const { isModalOpen, setIsModalOpen, getData, listRoles } = props
-    const [name, setName] = useState<string>("");
-    const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
-    const [roleId, setRole] = useState<number>(0);
-    const [confirmPassword, setConfirmPassword] = useState<string>("");
     const handleCloseCreateModal = () => {
         setIsModalOpen(false)
-        setName("")
-        setEmail("")
-        setPassword("")
-        setConfirmPassword("")
+        form.resetFields()
     }
-    const handleOk = async () => {
+
+    const onFinish = async (values: IUsers) => {
         const data = {
-            name: name,
-            email: email,
-            roleId: roleId,
+            name: values.name,
+            email: values.email,
             management_password: {
-                password: password,
-                confirm_password: confirmPassword
-            }
-        }
-        console.log("MY DATA: ", data)
+                password: values.password,
+                confirm_password: values.confirm_password,
+
+            },
+            roleId: values?.role?.id
+        };
         const res = await fetch(
             "http://localhost:8080/api/v1/users", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ ...data })
+            body: JSON.stringify(data)
         }
         )
         const d = await res.json()
@@ -72,13 +64,69 @@ const UserCreateModal = (props: IProps) => {
                 open={isModalOpen}
                 maskClosable={false}
                 onOk={() => {
-                    handleOk()
+                    form.submit()
                 }}
                 onCancel={() => {
                     handleCloseCreateModal();
                 }}
             >
-                <div>
+                <Form
+                    form={form}
+                    name="basic"
+                    onFinish={onFinish}
+                    layout="vertical"
+                >
+                    <Form.Item<IUsers>
+                        label="Name"
+                        name="name"
+                        rules={[{ required: true, message: 'Please input your name!' }]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item<IUsers>
+                        label="Email"
+                        name="email"
+                        rules={[{ required: true, message: 'Please input your email!' }]}
+                    >
+                        <Input />
+                    </Form.Item>
+                    <Form.Item<IUsers>
+                        label="Password"
+                        name="password"
+                        rules={[{ required: true, message: 'Please input your confirm password!' }]}
+                    >
+                        <Input.Password />
+                    </Form.Item>
+
+                    <Form.Item<IUsers>
+                        label="Confirm Password"
+                        name="confirm_password"
+                        rules={[{ required: true, message: 'Please input your confirm password!' }]}
+                    >
+                        <Input.Password />
+                    </Form.Item>
+
+                    <Form.Item<IUsers>
+                        label="Role"
+                        name={['role', 'id']}
+                        rules={[{ required: true, message: 'Please input your role!' }]}
+                    >
+                        <Select
+
+                            options={listRoles?.map(role => ({
+                                label: role.name,
+                                value: role.id,
+                            }))} />
+                    </Form.Item>
+
+                    <Form.Item<IUsers>
+                        valuePropName="checked" label={null}>
+                        <Checkbox>Remember me</Checkbox>
+                    </Form.Item>
+
+
+                </Form>
+                {/* <div>
                     <label>Name</label>
                     <Input
                         value={name}
@@ -126,7 +174,7 @@ const UserCreateModal = (props: IProps) => {
                         }))}
                         onChange={(value) => setRole(value)}
                     ></Select>
-                </div>
+                </div> */}
             </Modal>
         </div>
     )

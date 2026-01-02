@@ -11,6 +11,8 @@ export interface IUsers {
     id: number;
     name: string,
     email: string,
+    password: string,
+    confirm_password: string,
     role: {
         id: number,
         name: string,
