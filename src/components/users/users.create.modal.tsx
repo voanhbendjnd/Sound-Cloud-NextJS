@@ -56,7 +56,7 @@ const UserCreateModal = (props: IProps) => {
         else {
             api.success({
                 message: "Success",
-                description: "Create user success"
+                description: "Create User Successfully"
             })
             handleCloseCreateModal();
             await getData()
@@ -120,7 +120,7 @@ const UserCreateModal = (props: IProps) => {
                     <Select
                         placeholder="Select role"
                         style={{ width: "100%" }}
-                        options={listRoles.map(role => ({
+                        options={listRoles?.map(role => ({
                             label: role.name,
                             value: role.id,
                         }))}

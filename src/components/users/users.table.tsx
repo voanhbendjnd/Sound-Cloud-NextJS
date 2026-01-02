@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 // import '../../styles/users.css'
 import type { ColumnsType } from 'antd/es/table';
 import Table from 'antd/es/table';
-import { Button } from 'antd';
+import { Button, notification, Popconfirm } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import UserCreateModal from './users.create.modal';
 import '../../App.scss'
@@ -24,11 +24,43 @@ export interface IRoles {
 }
 
 const UsersTable = () => {
+    const [api, contextHolder] = notification.useNotification();
+
     const [dataUser, setDataUser] = useState<IUsers>();
     const [listRoles, setListRoles] = useState<IRoles[]>([]);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isOpenUpdateModal, setIsOpenUpdateModal] = useState<boolean>(false);
-
+    const [meta, setMeta] = useState({
+        page: 1,
+        pageSize: 5,
+        pages: 0,
+        total: 0
+    })
+    const handleDelete = async (user: IUsers) => {
+        const res = await fetch(
+            `http://localhost:8080/api/v1/users/${user.id}`,
+            {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        )
+        if (res.status !== 200) {
+            const d = await res.json()
+            api.error({
+                description: d.message,
+                message: d.error
+            })
+        }
+        else {
+            api.success({
+                message: "Delete User",
+                description: "Delete User Successfully"
+            })
+            await getData();
+        }
+    }
     const columns: ColumnsType<IUsers> = [
         {
             title: 'ID',
@@ -52,17 +84,33 @@ const UsersTable = () => {
         {
             title: "Actions",
             render: (value, record) => {
+                console.log(value)
                 return (
                     <div style={{ display: "flex", gap: "10px" }}>
+
                         <Button style={{ backgroundColor: "white", color: "green", border: "2px solid green" }}
                             onClick={() => {
                                 setIsOpenUpdateModal(true)
                                 setDataUser(record)
                             }}
                         >Edit</Button>
-                        <Button type="primary" danger ghost>
-                            Delete
-                        </Button>
+                        <Popconfirm
+                            description={"Are You Sure Delete This User?"}
+                            title={"Delete User"}
+                            placement='top'
+                            okText="YES"
+                            cancelText="NO"
+                            onConfirm={() => {
+                                handleDelete(record)
+                            }}
+
+                        >
+                            <Button type="primary" danger ghost>
+                                Delete
+                            </Button>
+                        </Popconfirm>
+
+
                     </div>
                 )
             }
@@ -70,19 +118,21 @@ const UsersTable = () => {
     ]
     const [listUsers, setListUsers] = useState<IUsers[]>([]);
     const getData = async () => {
-        const res = await fetch("http://localhost:8080/api/v1/users", {
+        const res = await fetch(`http://localhost:8080/api/v1/users?page=${meta.page}&size=${meta.pageSize}`, {
             method: "GET",
-            // body: JSON.stringify({
-            //     email: "benva.ce190709@gmail.com",
-            //     password: "123456"
-            // }),
             headers: {
                 "Content-Type": "application/json"
             }
         })
         const d = await res.json();
-        console.log(d.result);
-        setListUsers(d.result)
+        console.log(d.data);
+        setListUsers(d.data?.result || [])
+        setMeta({
+            page: d.data.meta.page,
+            pageSize: d.data.meta.pageSize,
+            pages: d.data.meta.pages,
+            total: d.data.meta.total
+        })
     }
     const getRole = async () => {
         const res = await fetch("http://localhost:8080/api/v1/roles", {
@@ -91,16 +141,44 @@ const UsersTable = () => {
             }
         })
         const d = await res.json();
-        setListRoles(d.result);
+        setListRoles(d.data?.result || []);
 
     }
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         getData();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         getRole();
     }, [])
+    const handleOnChange = async (page: number, pageSize: number) => {
+
+        const res = await fetch(
+            `http://localhost:8080/api/v1/users?page=${page}&size=${pageSize}`,
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            }
+        )
+        const d = await res.json();
+        if (!d.data) {
+            api.error({
+                message: d.error,
+                description: d.message
+            })
+        }
+        else {
+            setListUsers(d.data.result)
+            setMeta({
+                page: d.data.meta.page,
+                pageSize: d.data.meta.pageSize,
+                pages: d.data.meta.pages,
+                total: d.data.meta.total
+            })
+        }
+    }
     return (
         <div>
+            {contextHolder}
             <div style={{
                 display: "flex",
                 flexDirection: "column",
@@ -137,10 +215,18 @@ const UsersTable = () => {
                 rowKey={"id"}
                 columns={columns}
                 dataSource={listUsers}
+                pagination={{
+                    current: meta.page,
+                    pageSize: meta.pageSize,
+                    total: meta.total,
+                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
+                    onChange: (page: number, pageSize: number) => handleOnChange(page, pageSize),
+                    showSizeChanger: true
+                }}
             >
 
             </Table>
-        </div>
+        </div >
     )
 }
 export default UsersTable

@@ -6,44 +6,39 @@ interface IProps {
     isModalOpen: boolean
     setIsModalOpen: (v: boolean) => void
     getData: () => void
-    listRoles: IRoles[]
+    listRoles?: IRoles[]
     dataUser: IUsers | undefined
     setDataUser: (v: IUsers) => void
 }
 
 
 const UserUpdateModal = (props: IProps) => {
-    const { isModalOpen, setIsModalOpen, getData, listRoles, dataUser, setDataUser } = props;
+    const { isModalOpen, setIsModalOpen, getData, listRoles, dataUser } = props;
     const [api, contextHolder] = notification.useNotification();
+    const [id, setId] = useState<number>();
     const [name, setName] = useState<string>("");
     const [email, setEmail] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
     const [roleId, setRole] = useState<number>(0);
-    const [confirmPassword, setConfirmPassword] = useState<string>("");
     useEffect(() => {
         if (dataUser) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setName(dataUser.name);
             setEmail(dataUser.email)
+            setId(dataUser.id)
             setRole(dataUser.role?.id ?? 0)
-            setPassword("")
-            setConfirmPassword("")
         }
     }, [dataUser])
     const handleOk = async () => {
         const data = {
+            id: id,
             name: name,
             email: email,
             roleId: roleId,
-            management_password: {
-                password: password,
-                confirm_password: confirmPassword
-            }
         }
         console.log("MY DATA: ", data)
         const res = await fetch(
             "http://localhost:8080/api/v1/users", {
-            method: "POST",
+            method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
             },
@@ -51,7 +46,7 @@ const UserUpdateModal = (props: IProps) => {
         }
         )
         const d = await res.json()
-        if (res.status !== 201) {
+        if (res.status !== 200) {
             api.error({
                 description: d.message,
                 message: d.error
@@ -60,7 +55,7 @@ const UserUpdateModal = (props: IProps) => {
         else {
             api.success({
                 message: "Success",
-                description: "Create user success"
+                description: "Update User Successfully"
             })
             await getData()
             setIsModalOpen(false)
@@ -83,6 +78,12 @@ const UserUpdateModal = (props: IProps) => {
                     setIsModalOpen(false)
                 }}
             >
+                <div>
+                    <Input
+                        value={id}
+                        disabled
+                    />
+                </div>
                 <div>
                     <label>Name</label>
                     <Input
@@ -107,10 +108,10 @@ const UserUpdateModal = (props: IProps) => {
                         placeholder="Select role"
                         value={roleId > 0 ? roleId : undefined}
                         style={{ width: "100%" }}
-                        options={listRoles.map(role => ({
+                        options={listRoles?.map(role => ({
                             label: role.name,
                             value: role.id,
-                        }))}
+                        })) || []}
                         onChange={(value) => setRole(value)}
                     ></Select>
                 </div>
